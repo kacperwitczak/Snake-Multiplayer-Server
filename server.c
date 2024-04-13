@@ -7,15 +7,26 @@
 #include <time.h>
 
 #define MAX_CLIENTS 10
+
 #define BUFFER_SIZE 1024
 
 #define CLIENT_BUFFER_SIZE 1
 
 #define SNAKE_SIZE 10
 
-#define BOARD_SIZE 30
+#define BOARD_SIZE 50
 
-#define FOOD_SIZE 5
+#define DELAY 100000
+
+#define FOOD_SIZE 13
+
+#define COLORS_SIZE 3
+
+char colors[COLORS_SIZE] = { 'G', 'Y', 'P' };
+
+
+
+
 
 // Struktura reprezentująca klienta
 typedef struct {
@@ -48,6 +59,7 @@ typedef struct {
     char direction;
     short is_alive;
     int size_to_add;
+    char color;
 } Snake;
 
 typedef struct {
@@ -73,7 +85,7 @@ void draw_board(Game *g) {
     }
     for (int i = 0; i < g->snake_size; i++) {
         if (g->snakes[i].is_alive) {
-            g->board[g->snakes[i].snake[0].y][g->snakes[i].snake[0].x] = 'H';
+            g->board[g->snakes[i].snake[0].y][g->snakes[i].snake[0].x] = g->snakes[i].color;
             for (int j = 1; j < g->snakes[i].size; j++) {
                 g->board[g->snakes[i].snake[j].y][g->snakes[i].snake[j].x] = 'B';
             }
@@ -107,11 +119,12 @@ char random_direction() {
 }
 
 
-void init_snake(Snake *s, int board_size) {
+void init_snake(Snake *s, int board_size, char col) {
     s->size = 1;
     s->snake[0] = random_point(board_size);
     s->direction = random_direction();
     s->is_alive = 1;
+    s->color = col;
 }
 
 void move_snake(Snake *s) {
@@ -187,7 +200,7 @@ void check_collision(Game *g) {
 
             //snake died mid his move
             if (g->snakes[i].is_alive == 0) {
-                init_snake(&g->snakes[i], g->board_size); //reborn of snake
+                init_snake(&g->snakes[i], g->board_size, g->snakes[i].color); //rebirth of snake
             }
         }
     }
@@ -204,7 +217,8 @@ void update_food(Game *g) {
 
 void register_new_player(int client_id, Game *g) {
     pthread_mutex_lock(&g->snake_mutex);
-    init_snake(&g->snakes[client_id], g->board_size);
+    char color = colors[client_id % COLORS_SIZE];
+    init_snake(&g->snakes[client_id], g->board_size, color);
     pthread_mutex_unlock(&g->snake_mutex);
 }
 
@@ -243,6 +257,9 @@ void *client_handler(void *arg) {
 
     //zarejestrowanie nowego gracza
     register_new_player(client_id, client_game_handle);
+
+    int size = BOARD_SIZE;
+    send(c.socket_fd, &size, sizeof(int), 0);
 
     while (1) {
         // Odbierz wiadomość od klienta
@@ -297,11 +314,12 @@ void *game_logic(void *arg) {
 
 
 
-        sleep(1);
+        usleep(DELAY);
     }
 }
 
 int main() {
+    srand(time(NULL));
     Game g;
     init_game(&g, BOARD_SIZE, MAX_CLIENTS, FOOD_SIZE);
     for (int i = 0; i < MAX_CLIENTS; i++) {
