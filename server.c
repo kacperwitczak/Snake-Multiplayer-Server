@@ -101,13 +101,16 @@ void init_game(Game *g, int board_size, int snake_size, int food_size) {
     draw_board(g);
 }
 
-
+char random_direction() {
+    char directions[4] = {'U', 'D', 'L', 'R'};
+    return directions[rand() % 4];
+}
 
 
 void init_snake(Snake *s, int board_size) {
     s->size = 1;
     s->snake[0] = random_point(board_size);
-    s->direction = 'R';
+    s->direction = random_direction();
     s->is_alive = 1;
 }
 
@@ -180,6 +183,11 @@ void check_collision(Game *g) {
                     g->foods[j].is_eaten = 1;
                     g->snakes[i].size_to_add = 1;
                 }
+            }
+
+            //snake died mid his move
+            if (g->snakes[i].is_alive == 0) {
+                init_snake(&g->snakes[i], g->board_size); //reborn of snake
             }
         }
     }
