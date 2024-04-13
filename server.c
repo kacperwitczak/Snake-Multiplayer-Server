@@ -18,7 +18,7 @@
 
 #define DELAY 100000
 
-#define FOOD_SIZE 13
+#define FOOD_SIZE 100
 
 #define COLORS_SIZE 3
 
@@ -99,6 +99,10 @@ void draw_board(Game *g) {
 }
 
 void init_game(Game *g, int board_size, int snake_size, int food_size) {
+    if (pthread_mutex_init(&g->snake_mutex, NULL) != 0) {
+        printf("\n mutex init failed\n");
+        exit(EXIT_FAILURE);
+    }
     g->board_size = board_size;
     g->snake_size = snake_size;
     g->food_size = food_size;
@@ -113,18 +117,22 @@ void init_game(Game *g, int board_size, int snake_size, int food_size) {
     draw_board(g);
 }
 
+void destroy_game(Game *g) {
+    pthread_mutex_destroy(&g->snake_mutex);
+}
+
 char random_direction() {
     char directions[4] = {'U', 'D', 'L', 'R'};
     return directions[rand() % 4];
 }
 
 
-void init_snake(Snake *s, int board_size, char col) {
+void init_snake(Snake *s, int board_size) {
     s->size = 1;
     s->snake[0] = random_point(board_size);
     s->direction = random_direction();
     s->is_alive = 1;
-    s->color = col;
+    s->color = colors[rand() % COLORS_SIZE];
 }
 
 void move_snake(Snake *s) {
@@ -200,7 +208,7 @@ void check_collision(Game *g) {
 
             //snake died mid his move
             if (g->snakes[i].is_alive == 0) {
-                init_snake(&g->snakes[i], g->board_size, g->snakes[i].color); //rebirth of snake
+                init_snake(&g->snakes[i], g->board_size); //rebirth of snake
             }
         }
     }
@@ -217,8 +225,7 @@ void update_food(Game *g) {
 
 void register_new_player(int client_id, Game *g) {
     pthread_mutex_lock(&g->snake_mutex);
-    char color = colors[client_id % COLORS_SIZE];
-    init_snake(&g->snakes[client_id], g->board_size, color);
+    init_snake(&g->snakes[client_id], g->board_size);
     pthread_mutex_unlock(&g->snake_mutex);
 }
 
@@ -255,11 +262,12 @@ void *client_handler(void *arg) {
     c = clients[client_id];
     pthread_mutex_unlock(&mutex_clients);
 
+    int size = BOARD_SIZE;
+    int net_size = htonl(size);
+    send(c.socket_fd, &net_size, sizeof(net_size), 0);
+
     //zarejestrowanie nowego gracza
     register_new_player(client_id, client_game_handle);
-
-    int size = BOARD_SIZE;
-    send(c.socket_fd, &size, sizeof(int), 0);
 
     while (1) {
         // Odbierz wiadomość od klienta
@@ -301,6 +309,7 @@ void *game_logic(void *arg) {
         }
         pthread_mutex_unlock(&mutex_clients);
 
+
         pthread_mutex_lock(&g->snake_mutex);
         for (int i = 0; i < g->snake_size; i++) {
             if (g->snakes[i].is_alive) {
@@ -312,14 +321,18 @@ void *game_logic(void *arg) {
         draw_board(g);
         pthread_mutex_unlock(&g->snake_mutex);
 
-
-
         usleep(DELAY);
     }
 }
 
 int main() {
     srand(time(NULL));
+
+    if (pthread_mutex_init(&mutex_clients, NULL) != 0) {
+        printf("\n mutex init failed\n");
+        return 1;
+    }
+
     Game g;
     init_game(&g, BOARD_SIZE, MAX_CLIENTS, FOOD_SIZE);
     for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -407,6 +420,8 @@ int main() {
 
     // Zamknij gniazdo serwera
     close(server_socket_fd);
+    destroy_game(&g);
+    pthread_mutex_destroy(&mutex_clients);
 
     return 0;
 }
