@@ -11,8 +11,6 @@
 
 #define CLIENT_BUFFER_SIZE 1
 
-#define QUEUE_SIZE 1024
-
 #define SNAKE_SIZE 10
 
 #define BOARD_SIZE 30
@@ -30,10 +28,6 @@ typedef struct {
 // Lista klientów
 Client clients[MAX_CLIENTS];
 int num_clients = 0;
-
-//TODO zamienic na prymitywna hashmape (tablica haszujaca) modulo 
-char queue[QUEUE_SIZE];
-int queue_index = 0;
 
 typedef struct {
     int x;
@@ -220,7 +214,6 @@ void set_new_move(int client_id, char move, Game *g) {
 
 // Mutex do synchronizacji dostępu do współdzielonych danych
 pthread_mutex_t mutex_clients = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_queue = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct {
     int client_id;
