@@ -8,3 +8,11 @@ how to run:
 
 how to debug:
     make debug
+
+TODO
+0. Create readme - Done
+1. Fix comments
+2. Add documentation (for ex. how many bytes are we sending/reading to/from clien)
+3. Implement game logic after snake death
+4. Fix initializing of snake (we don't want to spawn new snake near border)
+5. Add color to each snake in Snakes array in Game struct and send this color do client so he can distinguish his snake from others
