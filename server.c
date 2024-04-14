@@ -277,6 +277,10 @@ void* client_handler(void* arg) {
     
     send(c.socket_fd, &net_size, sizeof(net_size), 0); //send(fileDesctiptor (value to identificate socket), buffer, size of buffer, flags (0 = no flags))
 
+    pthread_mutex_lock(&mutex_clients);
+    c.is_used = 1;
+    clients[client_id].is_used = 1;
+    pthread_mutex_unlock(&mutex_clients);
 
     register_new_player(client_id, client_game_handle);
 
@@ -402,7 +406,7 @@ int main() {
                 if (clients[i].is_used == 0) {
                     clients[i].socket_fd = client_socket_fd;
                     clients[i].address = client_address;
-                    clients[i].is_used = 1;
+                    clients[i].is_used = 0;
                     client_id = i;
                     break;
                 }
