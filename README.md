@@ -54,5 +54,5 @@ Run the server
 - Implement game logic after snake death - ✅
 - Add documentation (for ex. how many bytes are we sending/reading to/from client)
 - Fix initializing of snake (we don't want to spawn new snake near border)
-- Add color to each snake in Snakes array in Game struct and send this color do client so he can distinguish his snake from others
+- Add color to each snake in Snakes array in Game struct and send this color do client so he can distinguish his snake from others - ✅
 - Refactor code
