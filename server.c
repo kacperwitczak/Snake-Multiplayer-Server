@@ -37,17 +37,6 @@ typedef struct {
 Point random_point(int board_size) {
     Point p;
     p.x = rand() % board_size;
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -42,75 +53,63 @@ Point random_point(int board_size) {
-  
     p.y = rand() % board_size;
     return p;
 }
@@ -92,7 +81,7 @@ void draw_board(Game *g) {
             g->board[g->snakes[i].snake[0].y][g->snakes[i].snake[0].x] = g->snakes[i].color;
             // Draw the rest of the snake body
             for (int j = 1; j < g->snakes[i].size; j++) {
-                g->board[g->snakes[i].snake[j].y][g->snakes[i].snake[j].x] = 'B';
+                g->board[g->snakes[i].snake[j].y][g->snakes[i].snake[j].x] = g->snakes[i].color;
             }
         }
     }
@@ -125,18 +114,8 @@ void init_game(Game *g, int board_size, int snake_size, int food_size) {
     for (int i = 0; i < food_size; i++) {
         g->foods[i].food = random_point(board_size);
         g->foods[i].is_eaten = 0;
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -119,18 +118,16 @@ void init_game(Game *g, int board_size, int snake_size, int food_size) {
-  
     }
+
     draw_board(g);
 }
 
@@ -155,17 +134,6 @@ char random_direction() {
 void init_snake(Snake *s, int board_size) {
     s->size = 1;
     s->snake[0] = random_point(board_size);
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -139,40 +136,36 @@ void init_snake(Snake *s, int board_size) {
-  
     s->direction = random_direction();
     s->is_alive = 1;
     s->color = colors[rand() % COLORS_SIZE];
@@ -301,9 +269,11 @@ void *client_handler(void *arg) {
     Game *client_game_handle = client_reg.g;
     Client c;
     char buffer[CLIENT_BUFFER_SIZE];
+
     pthread_mutex_lock(&mutex_clients);
     c = clients[client_id];
     pthread_mutex_unlock(&mutex_clients);
+
     int size = BOARD_SIZE;
     int net_size = htonl(size);
     send(c.socket_fd, &net_size, sizeof(net_size), 0);
@@ -359,9 +329,11 @@ void *game_logic(void *arg) {
         update_food(g);
         draw_board(g);
         pthread_mutex_unlock(&g->snake_mutex);
+
         usleep(DELAY);
     }
 }
+
 int main() {
     srand(time(NULL));
 
@@ -427,17 +399,6 @@ int main() {
             pthread_mutex_lock(&mutex_clients);
             int client_id = -1;
             for (int i = 0; i < MAX_CLIENTS; i++) {
-
-    
-        
-          
-    
-
-        
-        Expand All
-    
-    @@ -413,22 +404,22 @@ int main() {
-  
                 if (clients[i].is_used == 0) {
                     clients[i].socket_fd = client_socket_fd;
                     clients[i].address = client_address;
@@ -472,15 +433,5 @@ int main() {
     destroy_game(&g);
     pthread_mutex_destroy(&mutex_clients);
 
-    
-          
-            
-    
-
-          
-          Expand Down
-    
-    
-  
     return 0;
 }
