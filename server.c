@@ -151,16 +151,16 @@ void move_snake(Snake *s) {
     Point new_head = s->snake[0];
     switch (s->direction) {
         case 'U':
-            new_head.y = (new_head.y - 1) % BOARD_SIZE;  // Wrap around the board
+            new_head.y = (new_head.y - 1);
             break;
         case 'D':
-            new_head.y = (new_head.y + 1) % BOARD_SIZE;
+            new_head.y = (new_head.y + 1);
             break;
         case 'L':
-            new_head.x = (new_head.x - 1) % BOARD_SIZE;
+            new_head.x = (new_head.x - 1);
             break;
         case 'R':
-            new_head.x = (new_head.x + 1) % BOARD_SIZE;
+            new_head.x = (new_head.x + 1);
             break;
     }
 
